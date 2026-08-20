@@ -1,7 +1,7 @@
-import HomeClient from "./HomeClient";
+import AdminClient from "./AdminClient";
 
 export const dynamic = "force-dynamic";
 
 export default function Page() {
-  return <HomeClient />;
+  return <AdminClient />;
 }

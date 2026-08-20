@@ -14,15 +14,12 @@ export async function registerCompetitor(formData: FormData): Promise<RegisterRe
   const position = formData.get("position") as StaffPosition;
   const outlet = formData.get("outlet") as OutletLocation;
 
-  // Validation
   if (!fullName || fullName.trim().length < 2) {
     return { success: false, error: "Full name is required (minimum 2 characters)." };
   }
-
   if (!position) {
     return { success: false, error: "Please select your position." };
   }
-
   if (!outlet) {
     return { success: false, error: "Please select your outlet." };
   }
@@ -34,7 +31,7 @@ export async function registerCompetitor(formData: FormData): Promise<RegisterRe
 
   const supabase = await createClient();
 
-  // Check for duplicate registration
+  // Check for duplicate
   const { data: existing } = await supabase
     .from("competitors")
     .select("id")
@@ -46,20 +43,16 @@ export async function registerCompetitor(formData: FormData): Promise<RegisterRe
     return { success: false, error: "A competitor with this name from this outlet is already registered." };
   }
 
-  // Insert competitor
+  // Insert
   const { data, error } = await supabase
     .from("competitors")
-    .insert({
-      full_name: fullName.trim(),
-      position,
-      outlet,
-    })
+    .insert({ full_name: fullName.trim(), position, outlet })
     .select("id")
     .single();
 
-  if (error) {
-    return { success: false, error: `Registration failed: ${error.message}` };
+  if (error || !data) {
+    return { success: false, error: `Registration failed: ${error?.message || "Unknown error"}` };
   }
 
-  return { success: true, competitorId: data.id };
+  return { success: true, competitorId: (data as { id: string }).id };
 }

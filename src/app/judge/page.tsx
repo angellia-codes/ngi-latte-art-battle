@@ -1,7 +1,7 @@
-import HomeClient from "./HomeClient";
+import JudgeClient from "./JudgeClient";
 
 export const dynamic = "force-dynamic";
 
 export default function Page() {
-  return <HomeClient />;
+  return <JudgeClient />;
 }

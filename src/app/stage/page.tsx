@@ -1,7 +1,7 @@
-import HomeClient from "./HomeClient";
+import StageClient from "./StageClient";
 
 export const dynamic = "force-dynamic";
 
 export default function Page() {
-  return <HomeClient />;
+  return <StageClient />;
 }
