@@ -19,7 +19,7 @@ export const metadata: Metadata = {
   title: "Nourish Barista Latte Art Battle 2026",
   description:
     "Internal latte art competition platform — Nourish Group Indonesia × EXPAT Roastery",
-  icons: { icon: "/latte-art.png" },
+  icons: { icon: "/favicon.png" },
 };
 
 export default function RootLayout({
