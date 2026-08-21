@@ -19,7 +19,7 @@ type Judge = JudgeName;
 const JUDGES = [
   { name: 'Made Bagia Arsana', title: 'Group General Manager of Nourish' },
   { name: 'Aristarkus Rawang', title: 'Bar Manager of Nourish' },
-  { name: 'Adinda Agustina', title: 'Coffee Trainer of Expatchan' }
+  { name: 'Adinda Agustina', title: 'Coffee Trainer of Expat' }
 ] as const;
 
 interface ScoreCriterion {

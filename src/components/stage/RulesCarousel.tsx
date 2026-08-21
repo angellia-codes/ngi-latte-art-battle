@@ -9,9 +9,9 @@ interface RulesCarouselProps {
 }
 
 const JUDGES = [
-  { name: 'Made Bagia Arsana', title: 'General Manager' },
-  { name: 'Aristarkus Rawang', title: 'Bar Manager' },
-  { name: 'Adinda Agustina', title: 'Coffee Trainer' },
+  { name: 'Made Bagia Arsana', title: 'Group General Manager of Nourish' },
+  { name: 'Aristarkus Rawang', title: 'Bar Manager of Nourish' },
+  { name: 'Adinda Agustina', title: 'Coffee Trainer of Expat' },
 ] as const;
 
 const slides = [
