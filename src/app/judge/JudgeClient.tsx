@@ -5,8 +5,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import {
   Check,
   ChevronLeft,
-  Minus,
-  Plus,
   AlertCircle,
   Timer,
   Coffee,
@@ -19,9 +17,9 @@ import { submitRound1Score, submitRound2Score, verifyJudgePin, type JudgeName } 
 type Judge = JudgeName;
 
 const JUDGES = [
-  { name: 'Made Bagia Arsana', title: 'General Manager' },
-  { name: 'Aristarkus Rawang', title: 'Bar Manager' },
-  { name: 'Adinda Agustina', title: 'Coffee Trainer' }
+  { name: 'Made Bagia Arsana', title: 'Group General Manager of Nourish' },
+  { name: 'Aristarkus Rawang', title: 'Bar Manager of Nourish' },
+  { name: 'Adinda Agustina', title: 'Coffee Trainer of Expatchan' }
 ] as const;
 
 interface ScoreCriterion {
@@ -112,14 +110,6 @@ export default function JudgeClient() {
       setPinError(true);
       setPin('');
     }
-  };
-
-  const handleScoreChange = (id: string, delta: number, maxScore: number) => {
-    setScores(prev => {
-      const current = prev[id] || 0;
-      const newScore = Math.max(0, Math.min(maxScore, current + delta));
-      return { ...prev, [id]: newScore };
-    });
   };
 
   const resetForm = () => {
@@ -353,25 +343,21 @@ export default function JudgeClient() {
                     <p className="text-[#FAEDCD]/50 text-sm">{c.description}</p>
                   </div>
                   
-                  <div className="flex items-center gap-6 bg-[#121212] p-2 rounded-2xl">
-                    <button 
-                      onClick={() => handleScoreChange(c.id, -1, c.maxScore)}
-                      className="w-16 h-16 flex items-center justify-center bg-[#1E1E1E] rounded-xl hover:bg-[#E76F51]/20 hover:text-[#E76F51] transition-colors active:scale-95"
-                    >
-                      <Minus size={28} />
-                    </button>
-                    
-                    <div className="w-24 text-center">
-                      <span className="text-4xl font-bold text-[#D4A373]">{currentScore}</span>
-                      <span className="text-xl text-[#FAEDCD]/30">/{c.maxScore}</span>
-                    </div>
-
-                    <button 
-                      onClick={() => handleScoreChange(c.id, 1, c.maxScore)}
-                      className="w-16 h-16 flex items-center justify-center bg-[#1E1E1E] rounded-xl hover:bg-[#2A9D8F]/20 hover:text-[#2A9D8F] transition-colors active:scale-95"
-                    >
-                      <Plus size={28} />
-                    </button>
+                  <div className="flex items-center gap-4 bg-[#121212] p-2 rounded-2xl">
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      min={0}
+                      max={c.maxScore}
+                      value={currentScore}
+                      onChange={(e) => {
+                        const num = e.target.value === "" ? 0 : Math.max(0, Math.min(c.maxScore, Number(e.target.value)));
+                        setScores((prev) => ({ ...prev, [c.id]: num }));
+                      }}
+                      className="w-24 h-16 rounded-xl bg-[#1E1E1E] border border-[#D4A373]/20 text-[#D4A373] text-3xl font-bold text-center focus:outline-none focus:border-[#D4A373] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="text-xl text-[#FAEDCD]/30">/{c.maxScore}</span>
                   </div>
                 </div>
 

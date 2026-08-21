@@ -41,14 +41,34 @@ export async function setStage(stage: BattleStage) {
 }
 
 // 6–8. Timer controls
+//
+// timer_seconds holds the remaining time as of timer_started_at (while
+// running) or as of the last pause/reset (while stopped). This lets any
+// client compute the exact remaining time from server state alone,
+// instead of ticking a local copy that drifts from the DB.
 export async function startTimer() {
-  return updateTournamentState({ timer_is_running: true });
+  return updateTournamentState({ timer_is_running: true, timer_started_at: new Date().toISOString() });
 }
+
 export async function pauseTimer() {
-  return updateTournamentState({ timer_is_running: false });
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("tournament_state")
+    .select("timer_seconds, timer_is_running, timer_started_at")
+    .eq("id", 1)
+    .single();
+
+  let remaining = data?.timer_seconds ?? 0;
+  if (data?.timer_is_running && data.timer_started_at) {
+    const elapsed = Math.floor((Date.now() - new Date(data.timer_started_at).getTime()) / 1000);
+    remaining = Math.max(0, remaining - elapsed);
+  }
+
+  return updateTournamentState({ timer_seconds: remaining, timer_is_running: false, timer_started_at: null });
 }
+
 export async function resetTimer(seconds: number = 180) {
-  return updateTournamentState({ timer_seconds: seconds, timer_is_running: false });
+  return updateTournamentState({ timer_seconds: seconds, timer_is_running: false, timer_started_at: null });
 }
 
 // ============================================================

@@ -26,9 +26,10 @@ export default function StageClient() {
   const [isFullscreen, setIsFullscreen] = useState(false)
   const supabase = createClient()
 
-  const { seconds: liveTimerSeconds, running: liveTimerRunning } = useCountdownTimer({
-    initialSeconds: tournamentState?.timer_seconds ?? 180,
+  const { seconds: liveTimerSeconds } = useCountdownTimer({
+    seconds: tournamentState?.timer_seconds ?? 180,
     isRunning: tournamentState?.timer_is_running ?? false,
+    startedAt: tournamentState?.timer_started_at ?? null,
   })
 
   // Fullscreen handling
@@ -158,7 +159,7 @@ export default function StageClient() {
           <CountdownTimer
             key="idle_timer"
             seconds={liveTimerSeconds}
-            isRunning={liveTimerRunning}
+            isRunning={tournamentState.timer_is_running || false}
             competitorName={activeCompetitor?.full_name || ''}
             competitorOutlet={activeCompetitor?.outlet || ''}
             pattern={tournamentState.active_pattern || ''}
@@ -184,6 +185,18 @@ export default function StageClient() {
         )
       case 'podium_ceremony': {
         const podiumData = computePodium()
+        if (!podiumData.champion || !podiumData.runnerUp1 || !podiumData.runnerUp2) {
+          return (
+            <div
+              key="podium_ceremony_pending"
+              className="flex-1 flex items-center justify-center text-[#FAEDCD] opacity-50"
+            >
+              <h1 className="text-2xl font-bold tracking-widest text-[#D4A373]">
+                Waiting for at least 3 finalists to reveal the podium…
+              </h1>
+            </div>
+          )
+        }
         return (
           <PodiumReveal
             key="podium_ceremony"

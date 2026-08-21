@@ -114,6 +114,7 @@ export interface TournamentState {
   active_pattern: PatternType | null;
   timer_seconds: number;
   timer_is_running: boolean;
+  timer_started_at: string | null;
   screen_mode: ScreenDisplayMode;
   updated_at: string;
 }

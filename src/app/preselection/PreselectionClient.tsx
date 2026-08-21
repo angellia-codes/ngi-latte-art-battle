@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type FormEvent } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ClipboardCheck, Users, Trophy, ChevronRight } from "lucide-react";
+import { ClipboardCheck, Users, Trophy, ChevronRight, ChevronLeft } from "lucide-react";
 import { useCompetitors, usePreselectionScores } from "@/hooks/use-realtime";
 import { submitPreselectionScore } from "./actions";
+import { verifyJudgePin } from "@/app/judge/actions";
 import type { Competitor, OutletLocation } from "@/lib/supabase/types";
 
 const JUDGES = ["Made Bagia Arsana", "Aristarkus Rawang"] as const;
@@ -28,6 +29,10 @@ export default function PreselectionClient() {
   const { scores, loading: scoreLoading } = usePreselectionScores();
 
   const [selectedJudge, setSelectedJudge] = useState<(typeof JUDGES)[number] | null>(null);
+  const [pendingJudge, setPendingJudge] = useState<(typeof JUDGES)[number] | null>(null);
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState(false);
+  const [isVerifyingPin, setIsVerifyingPin] = useState(false);
   const [selectedCompetitor, setSelectedCompetitor] = useState<Competitor | null>(null);
   const [view, setView] = useState<"scoring" | "leaderboard">("scoring");
 
@@ -76,6 +81,25 @@ export default function PreselectionClient() {
       .sort((a, b) => b.avgScore - a.avgScore);
   }, [competitors, scores]);
 
+  async function handlePinSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!pendingJudge || pin.length === 0) return;
+
+    setIsVerifyingPin(true);
+    const ok = await verifyJudgePin(pendingJudge, pin);
+    setIsVerifyingPin(false);
+
+    if (ok) {
+      setSelectedJudge(pendingJudge);
+      setPendingJudge(null);
+      setPin("");
+      setPinError(false);
+    } else {
+      setPinError(true);
+      setPin("");
+    }
+  }
+
   async function handleSubmit() {
     if (!selectedCompetitor || !selectedJudge) return;
     setSubmitting(true);
@@ -111,6 +135,56 @@ export default function PreselectionClient() {
     );
   }
 
+  // PIN entry
+  if (pendingJudge) {
+    return (
+      <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
+        <motion.form
+          onSubmit={handlePinSubmit}
+          initial={{ y: 20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className="max-w-sm w-full text-center space-y-8"
+        >
+          <button
+            type="button"
+            onClick={() => setPendingJudge(null)}
+            className="flex items-center gap-1 text-[#D4A373]/70 hover:text-[#D4A373] transition-colors"
+          >
+            <ChevronLeft className="w-5 h-5" /> Back
+          </button>
+
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-[#D4A373]">{pendingJudge}</h1>
+            <p className="text-[#FAEDCD]/70">Enter your PIN</p>
+          </div>
+
+          <input
+            type="password"
+            inputMode="numeric"
+            autoFocus
+            value={pin}
+            onChange={(e) => { setPin(e.target.value.replace(/\D/g, "")); setPinError(false); }}
+            className={`w-full bg-[#1E1E1E] border-2 rounded-2xl px-6 py-5 text-3xl text-center tracking-[0.5em] outline-none transition-colors ${
+              pinError ? "border-[#E76F51]" : "border-[#D4A373]/20 focus:border-[#D4A373]"
+            }`}
+          />
+
+          {pinError && (
+            <p className="text-[#E76F51] font-semibold">Incorrect PIN, try again.</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={pin.length === 0 || isVerifyingPin}
+            className="w-full py-5 rounded-2xl text-xl font-bold uppercase tracking-wider bg-[#D4A373] text-[#121212] hover:bg-[#D4A373]/90 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            {isVerifyingPin ? "Checking..." : "Unlock"}
+          </button>
+        </motion.form>
+      </div>
+    );
+  }
+
   // Judge selection
   if (!selectedJudge) {
     return (
@@ -125,7 +199,7 @@ export default function PreselectionClient() {
           {JUDGES.map((judge) => (
             <button
               key={judge}
-              onClick={() => setSelectedJudge(judge)}
+              onClick={() => { setPendingJudge(judge); setPin(""); setPinError(false); }}
               className="w-full bg-[#1E1E1E] border border-[#D4A373]/20 rounded-xl p-4 text-left hover:border-[#D4A373]/50 transition-all flex items-center justify-between group"
             >
               <div>

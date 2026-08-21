@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // ============================================================
 // Audio helper — uses Web Audio API as fallback (no external files needed)
@@ -47,101 +47,87 @@ function playBuzzer() {
 // ============================================================
 
 interface UseCountdownTimerOptions {
-  initialSeconds?: number;
-  isRunning?: boolean;
-  onTick?: (seconds: number) => void;
+  // Remaining seconds as of `startedAt` (while running) or the exact
+  // remaining seconds (while stopped) — i.e. tournament_state.timer_seconds.
+  seconds: number;
+  isRunning: boolean;
+  // ISO timestamp of when the current run started (tournament_state.timer_started_at).
+  startedAt: string | null;
   onComplete?: () => void;
   enableAudio?: boolean;
 }
 
+function computeRemaining(seconds: number, isRunning: boolean, startedAt: string | null) {
+  if (isRunning && startedAt) {
+    const elapsed = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
+    return Math.max(0, seconds - elapsed);
+  }
+  return Math.max(0, seconds);
+}
+
+// Derives the displayed countdown straight from server state + wall-clock
+// time on every tick, rather than decrementing a local counter — so it
+// can never drift from (or fail to resync with) the DB, even when the
+// DB writes the same numeric `seconds` value across a start/pause/reset.
 export function useCountdownTimer({
-  initialSeconds = 180,
-  isRunning = false,
-  onTick,
+  seconds,
+  isRunning,
+  startedAt,
   onComplete,
   enableAudio = true,
-}: UseCountdownTimerOptions = {}) {
-  const [seconds, setSeconds] = useState(initialSeconds);
-  const [running, setRunning] = useState(isRunning);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+}: UseCountdownTimerOptions) {
+  const [displaySeconds, setDisplaySeconds] = useState(() => computeRemaining(seconds, isRunning, startedAt));
   const audioPlayedRef = useRef<Set<number>>(new Set());
+  const completedRef = useRef(false);
 
-  // Sync with external state
+  // Snap to the authoritative value immediately whenever server state changes.
   useEffect(() => {
-    setSeconds(initialSeconds);
+    setDisplaySeconds(computeRemaining(seconds, isRunning, startedAt));
     audioPlayedRef.current.clear();
-  }, [initialSeconds]);
+    completedRef.current = false;
+  }, [seconds, isRunning, startedAt]);
 
   useEffect(() => {
-    setRunning(isRunning);
-  }, [isRunning]);
+    if (!isRunning) return;
 
-  // Core countdown
-  useEffect(() => {
-    if (running && seconds > 0) {
-      intervalRef.current = setInterval(() => {
-        setSeconds((prev) => {
-          const next = prev - 1;
+    const tick = () => {
+      const next = computeRemaining(seconds, isRunning, startedAt);
+      setDisplaySeconds(next);
 
-          // Audio alerts
-          if (enableAudio && !audioPlayedRef.current.has(next)) {
-            if (next === 60) {
-              playChime();
-              audioPlayedRef.current.add(60);
-            } else if (next === 30) {
-              playWarning();
-              audioPlayedRef.current.add(30);
-            } else if (next === 0) {
-              playBuzzer();
-              audioPlayedRef.current.add(0);
-            }
-          }
+      if (enableAudio && !audioPlayedRef.current.has(next)) {
+        if (next === 60) {
+          playChime();
+          audioPlayedRef.current.add(60);
+        } else if (next === 30) {
+          playWarning();
+          audioPlayedRef.current.add(30);
+        } else if (next === 0) {
+          playBuzzer();
+          audioPlayedRef.current.add(0);
+        }
+      }
 
-          onTick?.(next);
-
-          if (next <= 0) {
-            onComplete?.();
-            return 0;
-          }
-          return next;
-        });
-      }, 1000);
-    } else if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-    }
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (next <= 0 && !completedRef.current) {
+        completedRef.current = true;
+        onComplete?.();
       }
     };
-  }, [running, seconds > 0, enableAudio, onTick, onComplete]);
 
-  const start = useCallback(() => setRunning(true), []);
-  const pause = useCallback(() => setRunning(false), []);
-  const reset = useCallback(
-    (newSeconds?: number) => {
-      setRunning(false);
-      setSeconds(newSeconds ?? initialSeconds);
-      audioPlayedRef.current.clear();
-    },
-    [initialSeconds]
-  );
+    const interval = setInterval(tick, 250);
+    return () => clearInterval(interval);
+  }, [isRunning, seconds, startedAt, enableAudio, onComplete]);
 
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
+  const minutes = Math.floor(displaySeconds / 60);
+  const remainingSeconds = displaySeconds % 60;
   const formatted = `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
-  const progress = seconds / initialSeconds; // 1.0 → 0.0
+  const progress = seconds > 0 ? displaySeconds / seconds : 0;
 
   return {
-    seconds,
+    seconds: displaySeconds,
     minutes,
     remainingSeconds,
     formatted,
     progress,
-    running,
-    start,
-    pause,
-    reset,
+    running: isRunning,
   };
 }
