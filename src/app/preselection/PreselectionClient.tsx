@@ -178,7 +178,7 @@ export default function PreselectionClient() {
               <Users className="w-4 h-4" /> Select Competitor
             </h2>
             <div className="space-y-2">
-              {competitors.map((c) => {
+              {leaderboard.map((c) => {
                 const isScored = scoredCompetitorIds.has(c.id);
                 return (
                   <motion.button
@@ -197,11 +197,18 @@ export default function PreselectionClient() {
                       <p className="text-[#FAEDCD] font-medium">{c.full_name}</p>
                       <p className="text-[#FAEDCD]/40 text-xs">{c.outlet} · {c.position}</p>
                     </div>
-                    {isScored ? (
-                      <span className="text-xs px-2 py-1 rounded-full bg-[#2A9D8F]/10 text-[#2A9D8F]">Scored</span>
-                    ) : (
-                      <ChevronRight className="w-5 h-5 text-[#D4A373]/40" />
-                    )}
+                    <div className="flex items-center gap-3">
+                      {c.judgeCount > 0 && (
+                        <span className="text-[#D4A373] font-bold text-sm">
+                          {c.avgScore.toFixed(1)} <span className="text-[#FAEDCD]/30 font-normal">({c.judgeCount}/2)</span>
+                        </span>
+                      )}
+                      {isScored ? (
+                        <span className="text-xs px-2 py-1 rounded-full bg-[#2A9D8F]/10 text-[#2A9D8F]">Scored</span>
+                      ) : (
+                        <ChevronRight className="w-5 h-5 text-[#D4A373]/40" />
+                      )}
+                    </div>
                   </motion.button>
                 );
               })}
@@ -235,18 +242,19 @@ export default function PreselectionClient() {
                   </div>
                   <p className="text-xs text-[#FAEDCD]/30 mb-3">{criterion.description}</p>
                   <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormValues((prev) => ({
-                          ...prev,
-                          [criterion.key]: Math.max(0, prev[criterion.key] - 1),
-                        }))
-                      }
-                      className="w-12 h-12 rounded-xl bg-[#121212] border border-[#D4A373]/20 text-[#FAEDCD] text-xl font-bold flex items-center justify-center hover:bg-[#D4A373]/10 active:scale-95 transition-all"
-                    >
-                      −
-                    </button>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      min={0}
+                      max={criterion.max}
+                      value={formValues[criterion.key]}
+                      onChange={(e) => {
+                        const num = e.target.value === "" ? 0 : Math.max(0, Math.min(criterion.max, Number(e.target.value)));
+                        setFormValues((prev) => ({ ...prev, [criterion.key]: num }));
+                      }}
+                      className="w-20 h-12 rounded-xl bg-[#121212] border border-[#D4A373]/20 text-[#FAEDCD] text-xl font-bold text-center focus:outline-none focus:border-[#D4A373] [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
                     <div className="flex-1 h-2 bg-[#121212] rounded-full overflow-hidden">
                       <motion.div
                         className="h-full bg-[#D4A373] rounded-full"
@@ -254,18 +262,6 @@ export default function PreselectionClient() {
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       />
                     </div>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setFormValues((prev) => ({
-                          ...prev,
-                          [criterion.key]: Math.min(criterion.max, prev[criterion.key] + 1),
-                        }))
-                      }
-                      className="w-12 h-12 rounded-xl bg-[#121212] border border-[#D4A373]/20 text-[#FAEDCD] text-xl font-bold flex items-center justify-center hover:bg-[#D4A373]/10 active:scale-95 transition-all"
-                    >
-                      +
-                    </button>
                   </div>
                 </div>
               ))}

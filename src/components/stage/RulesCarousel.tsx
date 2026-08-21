@@ -2,37 +2,43 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Coffee, Award, Calendar, BookOpen, Star } from 'lucide-react';
+import { Coffee, Award, Calendar, BookOpen, Users } from 'lucide-react';
 
 interface RulesCarouselProps {
   autoPlayInterval?: number;
 }
 
+const JUDGES = [
+  { name: 'Made Bagia Arsana', title: 'General Manager' },
+  { name: 'Aristarkus Rawang', title: 'Bar Manager' },
+  { name: 'Adinda Agustina', title: 'Coffee Trainer' },
+] as const;
+
 const slides = [
   {
     id: 1,
-    icon: <Coffee size={60} className="text-crema" />,
+    icon: <Coffee size={50} className="text-crema" />,
     title: "Philosophy",
     content: "Quality + Control + Technique + Creativity > Complexity alone."
   },
   {
     id: 2,
-    icon: <Star size={60} className="text-sage" />,
-    title: "Scoring Bands",
+    icon: <Users size={50} className="text-sage" />,
+    title: "Meet the Judges",
     content: (
-      <div className="grid grid-cols-2 gap-x-12 gap-y-6 text-2xl mt-8 text-left">
-        <div><strong className="text-crema">90-100:</strong> Exceptional</div>
-        <div><strong className="text-crema">80-89:</strong> Very Good</div>
-        <div><strong className="text-crema">70-79:</strong> Good</div>
-        <div><strong className="text-crema">60-69:</strong> Satisfactory</div>
-        <div><strong className="text-crema">50-59:</strong> Needs Improvement</div>
-        <div><strong className="text-crema">&lt;50:</strong> Unacceptable</div>
+      <div className="flex flex-col gap-6 text-2xl mt-8">
+        {JUDGES.map((judge) => (
+          <div key={judge.name}>
+            <strong className="text-crema">{judge.name}</strong>
+            <div className="text-xl text-steamed-milk/70">{judge.title}</div>
+          </div>
+        ))}
       </div>
     )
   },
   {
     id: 3,
-    icon: <Calendar size={60} className="text-terracotta" />,
+    icon: <Calendar size={50} className="text-terracotta" />,
     title: "Competition Schedule",
     content: (
       <ul className="text-2xl space-y-6 text-left inline-block mt-8">
@@ -44,13 +50,13 @@ const slides = [
   },
   {
     id: 4,
-    icon: <BookOpen size={60} className="text-[#E9C46A]" />,
+    icon: <BookOpen size={50} className="text-[#E9C46A]" />,
     title: "Pre-Selection Criteria",
     content: "Pattern difficulty is capped. Focus is strictly on execution, contrast, symmetry, and overall harmony."
   },
   {
     id: 5,
-    icon: <Award size={60} className="text-sage" />,
+    icon: <Award size={50} className="text-sage" />,
     title: "Main Day Criteria",
     content: "Both rounds demand flawlessness under pressure. The final round encourages pushing the boundaries of creativity."
   },

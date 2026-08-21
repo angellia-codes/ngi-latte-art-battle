@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Maximize, Minimize } from 'lucide-react'
 import {
@@ -9,6 +9,7 @@ import {
   useR1Scores,
   useR2Scores,
 } from '@/hooks/use-realtime'
+import { useCountdownTimer } from '@/hooks/use-timer'
 import SpinningWheel from '@/components/stage/SpinningWheel'
 import CountdownTimer from '@/components/stage/CountdownTimer'
 import EliminationReveal from '@/components/stage/EliminationReveal'
@@ -24,6 +25,11 @@ export default function StageClient() {
 
   const [isFullscreen, setIsFullscreen] = useState(false)
   const supabase = createClient()
+
+  const { seconds: liveTimerSeconds, running: liveTimerRunning } = useCountdownTimer({
+    initialSeconds: tournamentState?.timer_seconds ?? 180,
+    isRunning: tournamentState?.timer_is_running ?? false,
+  })
 
   // Fullscreen handling
   useEffect(() => {
@@ -151,8 +157,8 @@ export default function StageClient() {
         return (
           <CountdownTimer
             key="idle_timer"
-            seconds={tournamentState.timer_seconds || 0}
-            isRunning={tournamentState.timer_is_running || false}
+            seconds={liveTimerSeconds}
+            isRunning={liveTimerRunning}
             competitorName={activeCompetitor?.full_name || ''}
             competitorOutlet={activeCompetitor?.outlet || ''}
             pattern={tournamentState.active_pattern || ''}
