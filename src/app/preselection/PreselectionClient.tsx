@@ -21,8 +21,15 @@ const CRITERIA = [
 const OUTLET_QUOTAS: Record<string, { label: string; quota: number; outlets: OutletLocation[] }> = {
   berawa: { label: "Nourish Berawa", quota: 2, outlets: ["Nourish Berawa"] },
   ungasan: { label: "Nourish Ungasan", quota: 3, outlets: ["Nourish Ungasan"] },
-  uluwatu: { label: "Uluwatu & The Bakery", quota: 5, outlets: ["Nourish Uluwatu", "The Bakery Uluwatu"] },
+  uluwatu: { label: "Nourish Uluwatu & The Bakery", quota: 5, outlets: ["Nourish Uluwatu", "The Bakery Uluwatu"] },
 };
+
+const OUTLETS: { value: OutletLocation; label: string }[] = [
+  { value: "Nourish Ungasan", label: "Nourish Ungasan" },
+  { value: "Nourish Berawa", label: "Nourish Berawa" },
+  { value: "Nourish Uluwatu", label: "Nourish Uluwatu" },
+  { value: "The Bakery Uluwatu", label: "The Bakery" },
+];
 
 export default function PreselectionClient() {
   const { competitors, loading: compLoading } = useCompetitors();
@@ -33,6 +40,7 @@ export default function PreselectionClient() {
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState(false);
   const [isVerifyingPin, setIsVerifyingPin] = useState(false);
+  const [selectedOutlet, setSelectedOutlet] = useState<OutletLocation | null>(null);
   const [selectedCompetitor, setSelectedCompetitor] = useState<Competitor | null>(null);
   const [view, setView] = useState<"scoring" | "leaderboard">("scoring");
 
@@ -80,6 +88,12 @@ export default function PreselectionClient() {
       })
       .sort((a, b) => b.avgScore - a.avgScore);
   }, [competitors, scores]);
+
+  // Leaderboard filtered down to the outlet the judge is currently scoring
+  const outletCompetitors = useMemo(
+    () => leaderboard.filter((c) => c.outlet === selectedOutlet),
+    [leaderboard, selectedOutlet]
+  );
 
   async function handlePinSubmit(e: FormEvent) {
     e.preventDefault();
@@ -216,6 +230,37 @@ export default function PreselectionClient() {
     );
   }
 
+  // Outlet selection
+  if (!selectedOutlet) {
+    return (
+      <div className="min-h-screen bg-[#121212] flex items-center justify-center p-4">
+        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="max-w-md w-full space-y-4">
+          <button
+            onClick={() => setSelectedJudge(null)}
+            className="flex items-center gap-1 text-[#D4A373]/70 hover:text-[#D4A373] transition-colors mb-2"
+          >
+            <ChevronLeft className="w-5 h-5" /> Back
+          </button>
+          <div className="text-center mb-8">
+            <ClipboardCheck className="w-12 h-12 text-[#D4A373] mx-auto mb-4" />
+            <h1 className="text-2xl font-bold text-[#FAEDCD] font-[family-name:var(--font-syne)]">Select Outlet</h1>
+            <p className="text-[#FAEDCD]/50 text-sm mt-1">{selectedJudge}</p>
+          </div>
+          {OUTLETS.map((outlet) => (
+            <button
+              key={outlet.value}
+              onClick={() => setSelectedOutlet(outlet.value)}
+              className="w-full bg-[#1E1E1E] border border-[#D4A373]/20 rounded-xl p-4 text-left hover:border-[#D4A373]/50 transition-all flex items-center justify-between group"
+            >
+              <p className="text-[#FAEDCD] font-medium">{outlet.label}</p>
+              <ChevronRight className="w-5 h-5 text-[#D4A373]/40 group-hover:text-[#D4A373]" />
+            </button>
+          ))}
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#121212] p-4">
       <div className="max-w-4xl mx-auto">
@@ -224,6 +269,16 @@ export default function PreselectionClient() {
           <div>
             <p className="text-[#D4A373] text-sm font-medium">{selectedJudge}</p>
             <h1 className="text-xl font-bold text-[#FAEDCD] font-[family-name:var(--font-syne)]">Pre-Selection</h1>
+            <button
+              onClick={() => {
+                setSelectedOutlet(null);
+                setSelectedCompetitor(null);
+                setSubmitMessage(null);
+              }}
+              className="text-[#FAEDCD]/40 text-xs mt-0.5 hover:text-[#D4A373] transition-colors"
+            >
+              {selectedOutlet} · Change outlet
+            </button>
           </div>
           <div className="flex gap-2">
             <button
@@ -252,7 +307,7 @@ export default function PreselectionClient() {
               <Users className="w-4 h-4" /> Select Competitor
             </h2>
             <div className="space-y-2">
-              {leaderboard.map((c) => {
+              {outletCompetitors.map((c) => {
                 const isScored = scoredCompetitorIds.has(c.id);
                 return (
                   <motion.button

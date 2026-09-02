@@ -1,8 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
 import { PatternType } from '@/lib/supabase/types';
+import rosetta from '@/asset/rosetta.jpeg';
+import swan from '@/asset/swan.jpeg';
+import seahorse from '@/asset/seahorse.jpeg';
+import phoenix from '@/asset/phoenix.jpeg';
+import stackedTulip from '@/asset/stacked_tulip.jpeg';
 
 interface SpinningWheelProps {
   onResult?: (pattern: PatternType) => void;
@@ -11,11 +17,11 @@ interface SpinningWheelProps {
 }
 
 const SEGMENTS = [
-  { name: 'Rosetta' as PatternType, emoji: '🌹', color: '#D4A373' },
-  { name: 'Swan' as PatternType, emoji: '🦢', color: '#FAEDCD' },
-  { name: 'Seahorse' as PatternType, emoji: '🐴', color: '#E76F51' },
-  { name: 'Phoenix' as PatternType, emoji: '🔥', color: '#2A9D8F' },
-  { name: 'Stacked Tulip' as PatternType, emoji: '🌷', color: '#1E1E1E' },
+  { name: 'Rosetta' as PatternType, emoji: '🌹', color: '#D4A373', image: rosetta },
+  { name: 'Swan' as PatternType, emoji: '🦢', color: '#FAEDCD', image: swan },
+  { name: 'Seahorse' as PatternType, emoji: '🐴', color: '#E76F51', image: seahorse },
+  { name: 'Phoenix' as PatternType, emoji: '🔥', color: '#2A9D8F', image: phoenix },
+  { name: 'Stacked Tulip' as PatternType, emoji: '🌷', color: '#1E1E1E', image: stackedTulip },
 ];
 
 export default function SpinningWheel({ onResult, spinning = false, result = null }: SpinningWheelProps) {
@@ -109,9 +115,23 @@ export default function SpinningWheel({ onResult, spinning = false, result = nul
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-8 text-center"
+            className="mt-8 flex flex-col items-center text-center"
           >
-            <h2 className="text-3xl font-display text-steamed-milk">Selected Pattern</h2>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
+              className="rounded-lg border-4 border-crema bg-steamed-milk p-2 shadow-2xl"
+            >
+              <Image
+                src={SEGMENTS.find(s => s.name === result)!.image}
+                alt={result}
+                width={220}
+                height={220}
+                className="rounded object-cover"
+              />
+            </motion.div>
+            <h2 className="mt-6 text-3xl font-display text-steamed-milk">Selected Pattern</h2>
             <p className="text-5xl font-bold text-crema mt-2 drop-shadow-[0_0_15px_rgba(212,163,115,0.5)]">
               {SEGMENTS.find(s => s.name === result)?.emoji} {result}
             </p>
