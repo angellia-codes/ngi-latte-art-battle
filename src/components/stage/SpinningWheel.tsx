@@ -57,13 +57,14 @@ export default function SpinningWheel({ onResult, spinning = false, result = nul
   const radius = 200;
   const cx = 200;
   const cy = 200;
+  const wheelSize = 640; // px — bump this to resize the whole wheel
 
   return (
-    <div className="flex flex-col items-center justify-center w-full min-h-[500px]">
-      <div className="relative w-[400px] h-[400px]">
+    <div className="flex flex-col items-center justify-center w-full h-full">
+      <div className="relative" style={{ width: wheelSize, height: wheelSize }}>
         {/* Pointer */}
-        <div className="absolute top-[-20px] left-[180px] w-0 h-0 border-l-[20px] border-l-transparent border-r-[20px] border-r-transparent border-t-[40px] border-t-terracotta z-10 filter drop-shadow-md"></div>
-        
+        <div className="absolute top-[-20px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[24px] border-l-transparent border-r-[24px] border-r-transparent border-t-[48px] border-t-terracotta z-10 filter drop-shadow-md"></div>
+
         {/* Wheel */}
         <motion.div
           className="w-full h-full rounded-full overflow-hidden shadow-2xl relative border-4 border-crema"
@@ -71,7 +72,7 @@ export default function SpinningWheel({ onResult, spinning = false, result = nul
           transition={{ duration: 4, ease: [0.25, 1, 0.5, 1] }} // smooth deceleration
           style={{ originX: 0.5, originY: 0.5 }}
         >
-          <svg width="400" height="400" viewBox="0 0 400 400">
+          <svg width={wheelSize} height={wheelSize} viewBox="0 0 400 400">
             {SEGMENTS.map((segment, i) => {
               const startAngle = (i * 360) / SEGMENTS.length;
               const endAngle = ((i + 1) * 360) / SEGMENTS.length;
@@ -116,7 +117,7 @@ export default function SpinningWheel({ onResult, spinning = false, result = nul
         </motion.div>
         
         {/* Center dot */}
-        <div className="absolute top-[185px] left-[185px] w-[30px] h-[30px] rounded-full bg-crema shadow-inner z-10 border-4 border-espresso-black"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[42px] h-[42px] rounded-full bg-crema shadow-inner z-10 border-4 border-espresso-black"></div>
       </div>
       
       {/* Result Display */}
