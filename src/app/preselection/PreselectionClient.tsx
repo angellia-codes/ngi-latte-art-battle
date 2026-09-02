@@ -24,12 +24,8 @@ const OUTLET_QUOTAS: Record<string, { label: string; quota: number; outlets: Out
   uluwatu: { label: "Nourish Uluwatu & The Bakery", quota: 5, outlets: ["Nourish Uluwatu", "The Bakery Uluwatu"] },
 };
 
-const OUTLETS: { value: OutletLocation; label: string }[] = [
-  { value: "Nourish Ungasan", label: "Nourish Ungasan" },
-  { value: "Nourish Berawa", label: "Nourish Berawa" },
-  { value: "Nourish Uluwatu", label: "Nourish Uluwatu" },
-  { value: "The Bakery Uluwatu", label: "The Bakery" },
-];
+// Order the outlet-selection screen: Ungasan, Berawa, then the combined Uluwatu & Bakery pool
+const OUTLET_POOL_KEYS: (keyof typeof OUTLET_QUOTAS)[] = ["ungasan", "berawa", "uluwatu"];
 
 export default function PreselectionClient() {
   const { competitors, loading: compLoading } = useCompetitors();
@@ -40,7 +36,7 @@ export default function PreselectionClient() {
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState(false);
   const [isVerifyingPin, setIsVerifyingPin] = useState(false);
-  const [selectedOutlet, setSelectedOutlet] = useState<OutletLocation | null>(null);
+  const [selectedOutlet, setSelectedOutlet] = useState<keyof typeof OUTLET_QUOTAS | null>(null);
   const [selectedCompetitor, setSelectedCompetitor] = useState<Competitor | null>(null);
   const [view, setView] = useState<"scoring" | "leaderboard">("scoring");
 
@@ -91,7 +87,7 @@ export default function PreselectionClient() {
 
   // Leaderboard filtered down to the outlet the judge is currently scoring
   const outletCompetitors = useMemo(
-    () => leaderboard.filter((c) => c.outlet === selectedOutlet),
+    () => (selectedOutlet ? leaderboard.filter((c) => OUTLET_QUOTAS[selectedOutlet].outlets.includes(c.outlet)) : []),
     [leaderboard, selectedOutlet]
   );
 
@@ -246,13 +242,13 @@ export default function PreselectionClient() {
             <h1 className="text-2xl font-bold text-[#FAEDCD] font-[family-name:var(--font-syne)]">Select Outlet</h1>
             <p className="text-[#FAEDCD]/50 text-sm mt-1">{selectedJudge}</p>
           </div>
-          {OUTLETS.map((outlet) => (
+          {OUTLET_POOL_KEYS.map((key) => (
             <button
-              key={outlet.value}
-              onClick={() => setSelectedOutlet(outlet.value)}
+              key={key}
+              onClick={() => setSelectedOutlet(key)}
               className="w-full bg-[#1E1E1E] border border-[#D4A373]/20 rounded-xl p-4 text-left hover:border-[#D4A373]/50 transition-all flex items-center justify-between group"
             >
-              <p className="text-[#FAEDCD] font-medium">{outlet.label}</p>
+              <p className="text-[#FAEDCD] font-medium">{OUTLET_QUOTAS[key].label}</p>
               <ChevronRight className="w-5 h-5 text-[#D4A373]/40 group-hover:text-[#D4A373]" />
             </button>
           ))}
@@ -277,7 +273,7 @@ export default function PreselectionClient() {
               }}
               className="text-[#FAEDCD]/40 text-xs mt-0.5 hover:text-[#D4A373] transition-colors"
             >
-              {selectedOutlet} · Change outlet
+              {OUTLET_QUOTAS[selectedOutlet].label} · Change outlet
             </button>
           </div>
           <div className="flex gap-2">

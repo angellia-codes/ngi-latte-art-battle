@@ -68,7 +68,7 @@ const SCHEDULE = [
   { date: "Fri, 4 Sep 2026", time: "5:00 PM WITA", venue: "Nourish Ungasan", quota: "Top 3" },
 ];
 
-const MAIN_DAY = { date: "Thu, 10 Sep 2026", time: "6:00 PM WITA", venue: "The Bakery Uluwatu" };
+const MAIN_DAY = { date: "Thu, 17 Sep 2026", time: "6:00 PM WITA", venue: "The Bakery Uluwatu" };
 
 export default function HomeClient() {
   const { state } = useTournamentState();

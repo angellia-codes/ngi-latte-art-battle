@@ -26,22 +26,32 @@ const SEGMENTS = [
 
 export default function SpinningWheel({ onResult, spinning = false, result = null }: SpinningWheelProps) {
   const [rotation, setRotation] = useState(0);
+  const [revealed, setRevealed] = useState(false);
 
   useEffect(() => {
-    if (spinning) {
-      // Calculate a target rotation based on the result if provided
-      let targetRot = 360 * 5; // at least 5 full spins
-      if (result) {
-        const resultIndex = SEGMENTS.findIndex(s => s.name === result);
-        const segmentAngle = 360 / SEGMENTS.length;
-        // Adjust so the center of the segment hits the top (0 degrees)
-        const targetOffset = 360 - (resultIndex * segmentAngle + segmentAngle / 2);
-        targetRot += targetOffset;
-      } else {
-        targetRot += Math.floor(Math.random() * 360);
-      }
-      setRotation(targetRot);
+    if (!spinning) return;
+
+    setRevealed(false);
+
+    // Calculate a target rotation based on the result if provided
+    let targetRot = 360 * 5; // at least 5 full spins
+    if (result) {
+      const resultIndex = SEGMENTS.findIndex(s => s.name === result);
+      const segmentAngle = 360 / SEGMENTS.length;
+      // Adjust so the center of the segment hits the top (0 degrees)
+      const targetOffset = 360 - (resultIndex * segmentAngle + segmentAngle / 2);
+      targetRot += targetOffset;
+    } else {
+      targetRot += Math.floor(Math.random() * 360);
     }
+    setRotation(targetRot);
+
+    if (!result) return;
+
+    // Reveal once the wheel's own 4s deceleration (see the motion.div transition below) finishes,
+    // since the parent screen always passes spinning=true and never flips it off itself.
+    const timer = setTimeout(() => setRevealed(true), 4200);
+    return () => clearTimeout(timer);
   }, [spinning, result]);
 
   const radius = 200;
@@ -111,7 +121,7 @@ export default function SpinningWheel({ onResult, spinning = false, result = nul
       
       {/* Result Display */}
       <AnimatePresence>
-        {result && !spinning && (
+        {result && revealed && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

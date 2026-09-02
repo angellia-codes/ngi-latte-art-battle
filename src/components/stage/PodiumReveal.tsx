@@ -62,57 +62,51 @@ export default function PodiumReveal({ champion, runnerUp1, runnerUp2 }: PodiumR
   );
 
   return (
-    <div className="w-full min-h-screen bg-espresso-black relative overflow-hidden flex flex-col items-center justify-end pb-0 px-10">
-      
+    <div className="w-full min-h-screen bg-espresso-black relative overflow-hidden flex flex-col items-center px-10 pt-12 pb-0">
+
       {/* Confetti overlay for champion */}
       <AnimatePresence>
         {step >= 3 && (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            className="absolute inset-0 pointer-events-none z-50 flex justify-center"
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="absolute inset-0 pointer-events-none z-50 overflow-hidden"
           >
-            {[...Array(50)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ 
-                  y: -100, 
-                  x: Math.random() * window.innerWidth,
-                  rotate: 0 
-                }}
-                animate={{ 
-                  y: window.innerHeight, 
-                  rotate: 360,
-                  x: (Math.random() * window.innerWidth) + (Math.random() > 0.5 ? 200 : -200)
-                }}
-                transition={{ 
-                  duration: Math.random() * 2 + 2, 
-                  repeat: Infinity,
-                  ease: 'linear',
-                  delay: Math.random() * 2
-                }}
-                className="absolute w-3 h-3 rounded-sm"
-                style={{
-                  backgroundColor: ['#FFD700', '#D4A373', '#FAEDCD', '#2A9D8F'][Math.floor(Math.random() * 4)]
-                }}
-              />
-            ))}
+            {[...Array(50)].map((_, i) => {
+              const startLeft = Math.random() * 100; // spread evenly across the full width
+              const drift = (Math.random() - 0.5) * 300; // wobble left or right as it falls
+              return (
+                <motion.div
+                  key={i}
+                  initial={{ top: '-5%', left: `${startLeft}%`, x: 0, rotate: 0 }}
+                  animate={{ top: '110%', x: drift, rotate: 360 }}
+                  transition={{
+                    duration: Math.random() * 2 + 2,
+                    repeat: Infinity,
+                    ease: 'linear',
+                    delay: Math.random() * 2
+                  }}
+                  className="absolute w-3 h-3 rounded-sm"
+                  style={{
+                    backgroundColor: ['#FFD700', '#D4A373', '#FAEDCD', '#2A9D8F'][Math.floor(Math.random() * 4)]
+                  }}
+                />
+              );
+            })}
           </motion.div>
         )}
       </AnimatePresence>
 
-      <div className="text-center absolute top-20 w-full z-10">
-        <motion.h1 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-7xl font-display text-crema uppercase tracking-widest drop-shadow-[0_0_15px_rgba(212,163,115,0.5)]"
-        >
-          Final Results
-        </motion.h1>
-      </div>
+      <motion.h1
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="text-7xl font-display text-crema uppercase tracking-widest drop-shadow-[0_0_15px_rgba(212,163,115,0.5)] text-center z-10 shrink-0 mb-10"
+      >
+        Final Results
+      </motion.h1>
 
-      <div className="flex items-end justify-center w-full max-w-6xl h-[600px] gap-4 z-20">
-        
+      <div className="flex items-end justify-center w-full max-w-6xl flex-1 gap-4 z-20 min-h-0">
+
         {/* 3rd Place */}
         <div className="flex-1 max-w-xs h-full">
           {step >= 1 && getCardContent(runnerUp2, 3, '#CD7F32', '2nd Runner-Up')}
