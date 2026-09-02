@@ -57,13 +57,12 @@ export default function SpinningWheel({ onResult, spinning = false, result = nul
   const radius = 200;
   const cx = 200;
   const cy = 200;
-  const wheelSize = 640; // px — bump this to resize the whole wheel
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full">
-      <div className="relative" style={{ width: wheelSize, height: wheelSize }}>
+    <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
+      <div className="relative w-[44vh] h-[44vh] max-w-[560px] max-h-[560px] min-w-[200px] min-h-[200px]">
         {/* Pointer */}
-        <div className="absolute top-[-20px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[24px] border-l-transparent border-r-[24px] border-r-transparent border-t-[48px] border-t-terracotta z-10 filter drop-shadow-md"></div>
+        <div className="absolute top-[-16px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[18px] border-l-transparent border-r-[18px] border-r-transparent border-t-[36px] border-t-terracotta z-10 filter drop-shadow-md"></div>
 
         {/* Wheel */}
         <motion.div
@@ -72,7 +71,7 @@ export default function SpinningWheel({ onResult, spinning = false, result = nul
           transition={{ duration: 4, ease: [0.25, 1, 0.5, 1] }} // smooth deceleration
           style={{ originX: 0.5, originY: 0.5 }}
         >
-          <svg width={wheelSize} height={wheelSize} viewBox="0 0 400 400">
+          <svg width="100%" height="100%" viewBox="0 0 400 400">
             {SEGMENTS.map((segment, i) => {
               const startAngle = (i * 360) / SEGMENTS.length;
               const endAngle = ((i + 1) * 360) / SEGMENTS.length;
@@ -117,16 +116,16 @@ export default function SpinningWheel({ onResult, spinning = false, result = nul
         </motion.div>
         
         {/* Center dot */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[42px] h-[42px] rounded-full bg-crema shadow-inner z-10 border-4 border-espresso-black"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[36px] h-[36px] rounded-full bg-crema shadow-inner z-10 border-4 border-espresso-black"></div>
       </div>
-      
+
       {/* Result Display */}
       <AnimatePresence>
         {result && revealed && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-8 flex flex-col items-center text-center"
+            className="mt-4 flex flex-col items-center text-center"
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
@@ -139,11 +138,11 @@ export default function SpinningWheel({ onResult, spinning = false, result = nul
                 alt={result}
                 width={220}
                 height={220}
-                className="rounded object-cover"
+                className="rounded object-cover w-[16vh] h-[16vh] max-w-[180px] max-h-[180px] min-w-[90px] min-h-[90px]"
               />
             </motion.div>
-            <h2 className="mt-6 text-3xl font-display text-steamed-milk">Selected Pattern</h2>
-            <p className="text-5xl font-bold text-crema mt-2 drop-shadow-[0_0_15px_rgba(212,163,115,0.5)]">
+            <h2 className="mt-3 text-xl font-display text-steamed-milk">Selected Pattern</h2>
+            <p className="text-3xl font-bold text-crema mt-1 drop-shadow-[0_0_15px_rgba(212,163,115,0.5)]">
               {SEGMENTS.find(s => s.name === result)?.emoji} {result}
             </p>
           </motion.div>

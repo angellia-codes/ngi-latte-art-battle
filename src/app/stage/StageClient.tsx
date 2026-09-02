@@ -73,7 +73,7 @@ export default function StageClient() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#121212] text-[#FAEDCD] flex items-center justify-center font-sans">
+      <div className="h-screen bg-[#121212] text-[#FAEDCD] flex items-center justify-center font-sans">
         <motion.div
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ repeat: Infinity, duration: 1.5, ease: 'easeInOut' }}
@@ -87,7 +87,7 @@ export default function StageClient() {
 
   if (!tournamentState) {
     return (
-      <div className="min-h-screen bg-[#121212] text-[#FAEDCD] flex items-center justify-center font-sans">
+      <div className="h-screen bg-[#121212] text-[#FAEDCD] flex items-center justify-center font-sans">
         <div className="text-xl">Waiting for tournament state...</div>
       </div>
     )
@@ -221,7 +221,7 @@ export default function StageClient() {
   }
 
   return (
-    <div className="min-h-screen bg-[#121212] text-[#FAEDCD] flex flex-col font-sans relative overflow-hidden">
+    <div className="h-screen bg-[#121212] text-[#FAEDCD] flex flex-col font-sans relative overflow-hidden">
       {/* Floating Fullscreen Toggle */}
       <button
         onClick={toggleFullscreen}

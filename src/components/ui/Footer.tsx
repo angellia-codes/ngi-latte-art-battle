@@ -1,4 +1,12 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
+
 export function Footer() {
+  const pathname = usePathname();
+  // The stage screen is a full-bleed kiosk display and must never scroll.
+  if (pathname?.startsWith('/stage')) return null;
+
   return (
     <footer className="border-t border-crema/20 py-4 text-center text-xs text-white/40">
       <a
