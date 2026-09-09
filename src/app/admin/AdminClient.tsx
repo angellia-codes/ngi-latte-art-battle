@@ -5,7 +5,28 @@ import { motion } from 'motion/react'
 import { Settings, Play, Pause, RotateCcw, Users, Trophy, Zap, Monitor, Timer, ChevronDown } from 'lucide-react'
 import { useTournamentState, useCompetitors, useR1Scores, useR2Scores, usePreselectionScores } from '@/hooks/use-realtime'
 import * as actions from './actions'
-import { BattleStage, ScreenDisplayMode, PatternType } from '@/lib/supabase/types'
+import { BattleStage, ScreenDisplayMode, PatternType, CompetitorStatus, OutletLocation } from '@/lib/supabase/types'
+
+// Which competitor statuses are eligible to be the active competitor at each
+// stage. Pre-selection runs before any cut has happened, so the pool there is
+// everyone who has not been scored yet plus everyone already scored.
+const STAGE_ELIGIBLE_STATUSES: Record<BattleStage, CompetitorStatus[]> = {
+  preselection_berawa: ['registered', 'preselection_completed'],
+  preselection_uluwatu: ['registered', 'preselection_completed'],
+  preselection_ungasan: ['registered', 'preselection_completed'],
+  main_day_r1_top10: ['qualified_finalist'],
+  main_day_r2_top5: ['qualified_top_5'],
+  completed: ['qualified_top_5', 'completed_tournament'],
+}
+
+// Pre-selection stages are named after the outlet whose heat is running, so the
+// competitors from that outlet are listed first. Uluwatu and The Bakery Uluwatu
+// share one heat, matching the quota pools in qualifyPreselectionFinalists.
+const STAGE_OUTLETS: Partial<Record<BattleStage, OutletLocation[]>> = {
+  preselection_berawa: ['Nourish Berawa'],
+  preselection_uluwatu: ['Nourish Uluwatu', 'The Bakery Uluwatu'],
+  preselection_ungasan: ['Nourish Ungasan'],
+}
 
 export default function AdminClient() {
   const { state: tournamentState, loading: tsLoading } = useTournamentState()
@@ -100,7 +121,26 @@ export default function AdminClient() {
   const screenModes: ScreenDisplayMode[] = ['idle_timer', 'spinning_wheel', 'mid_stage_cut', 'podium_ceremony', 'rules_carousel']
   const patterns: PatternType[] = ['Rosetta', 'Swan', 'Seahorse', 'Phoenix', 'Stacked Tulip']
 
-  const qualifiedFinalists = competitors.filter(c => c.status === 'qualified_finalist' || c.status === 'qualified_top_5')
+  // Active-competitor pool for the stage that is currently live.
+  const currentStage = tournamentState?.current_stage ?? 'preselection_berawa'
+  const eligibleStatuses = STAGE_ELIGIBLE_STATUSES[currentStage]
+  const stageOutlets = STAGE_OUTLETS[currentStage]
+
+  const eligibleCompetitors = competitors.filter(c => eligibleStatuses.includes(c.status))
+  const thisOutletCompetitors = stageOutlets
+    ? eligibleCompetitors.filter(c => stageOutlets.includes(c.outlet))
+    : eligibleCompetitors
+  const otherOutletCompetitors = stageOutlets
+    ? eligibleCompetitors.filter(c => !stageOutlets.includes(c.outlet))
+    : []
+
+  // A competitor selected before a cut can fall out of the eligible pool. Keep
+  // them listed so the dropdown still reflects what is actually on the stage
+  // screen instead of rendering blank.
+  const activeCompetitor = competitors.find(c => c.id === tournamentState?.active_competitor_id)
+  const activeIsEligible = !!activeCompetitor && eligibleCompetitors.some(c => c.id === activeCompetitor.id)
+
+  const competitorLabel = (c: typeof competitors[number]) => `${c.full_name} (${c.outlet})`
 
   return (
     <div className="min-h-screen bg-[#121212] text-[#FAEDCD] p-6 font-[family-name:var(--font-syne)] flex flex-col gap-6">
@@ -214,20 +254,55 @@ export default function AdminClient() {
             
             <div className="flex flex-col gap-4">
               <div>
-                <label className="text-sm text-[#D4A373] mb-1 block">Active Competitor</label>
+                <div className="flex items-baseline justify-between mb-1">
+                  <label className="text-sm text-[#D4A373]">Active Competitor</label>
+                  <span className="text-xs text-[#FAEDCD]/50">{currentStage.replace(/_/g, ' ')}</span>
+                </div>
                 <div className="relative">
                   <select 
                     value={tournamentState?.active_competitor_id || ''}
-                    onChange={(e) => handleAction('setActiveComp', () => actions.setActiveCompetitor(e.target.value))}
+                    onChange={(e) => handleAction('setActiveComp', () => actions.setActiveCompetitor(e.target.value || null))}
                     className="w-full bg-[#121212] border border-[#D4A373]/30 text-[#FAEDCD] p-2 rounded-lg appearance-none"
                   >
                     <option value="">-- Select Competitor --</option>
-                    {qualifiedFinalists.map(c => (
-                      <option key={c.id} value={c.id}>{c.full_name} ({c.outlet})</option>
-                    ))}
+
+                    {activeCompetitor && !activeIsEligible && (
+                      <optgroup label="Currently on screen (not eligible this stage)">
+                        <option value={activeCompetitor.id}>{competitorLabel(activeCompetitor)}</option>
+                      </optgroup>
+                    )}
+
+                    {otherOutletCompetitors.length > 0 ? (
+                      <optgroup label={stageOutlets ? stageOutlets.join(' / ') : 'Eligible'}>
+                        {thisOutletCompetitors.map(c => (
+                          <option key={c.id} value={c.id}>{competitorLabel(c)}</option>
+                        ))}
+                      </optgroup>
+                    ) : (
+                      thisOutletCompetitors.map(c => (
+                        <option key={c.id} value={c.id}>{competitorLabel(c)}</option>
+                      ))
+                    )}
+
+                    {otherOutletCompetitors.length > 0 && (
+                      <optgroup label="Other outlets">
+                        {otherOutletCompetitors.map(c => (
+                          <option key={c.id} value={c.id}>{competitorLabel(c)}</option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                   <ChevronDown className="absolute right-3 top-2.5 text-[#D4A373]" size={16} />
                 </div>
+
+                {eligibleCompetitors.length === 0 && (
+                  <p className="mt-2 text-xs text-[#E76F51] leading-relaxed">
+                    No competitor has the status this stage needs
+                    {' '}({eligibleStatuses.map(st => st.replace(/_/g, ' ')).join(' or ')}).
+                    {currentStage === 'main_day_r1_top10' && ' Run "Qualify Pre-Selection Finalists" first.'}
+                    {currentStage === 'main_day_r2_top5' && ' Run "Execute Top 5 Cut" first.'}
+                  </p>
+                )}
               </div>
 
               <div>

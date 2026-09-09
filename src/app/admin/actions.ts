@@ -27,8 +27,9 @@ export async function updateTournamentState(data: Record<string, unknown>) {
 }
 
 // 2–5. Simple setters
-export async function setActiveCompetitor(competitorId: string) {
-  return updateTournamentState({ active_competitor_id: competitorId });
+export async function setActiveCompetitor(competitorId: string | null) {
+  // An empty string is not a valid UUID; clearing the selection must write NULL.
+  return updateTournamentState({ active_competitor_id: competitorId || null });
 }
 export async function setPattern(pattern: PatternType) {
   return updateTournamentState({ active_pattern: pattern });
