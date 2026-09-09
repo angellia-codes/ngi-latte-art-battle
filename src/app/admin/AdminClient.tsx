@@ -107,7 +107,7 @@ export default function AdminClient() {
       
       <header className="flex justify-between items-center mb-4">
         <div>
-          <h1 className="text-3xl font-bold text-[#D4A373]">Head Judge Control</h1>
+          <h1 className="text-3xl font-bold text-[#D4A373]">Admin Control</h1>
           <p className="text-sm opacity-80 text-[#2A9D8F]">Nourish Barista Latte Art Battle 2026</p>
         </div>
         {resultMessage && (

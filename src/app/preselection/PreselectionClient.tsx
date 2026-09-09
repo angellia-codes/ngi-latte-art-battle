@@ -19,8 +19,8 @@ const CRITERIA = [
 ] as const;
 
 const OUTLET_QUOTAS: Record<string, { label: string; quota: number; outlets: OutletLocation[] }> = {
-  berawa: { label: "Nourish Berawa", quota: 2, outlets: ["Nourish Berawa"] },
-  ungasan: { label: "Nourish Ungasan", quota: 3, outlets: ["Nourish Ungasan"] },
+  berawa: { label: "Nourish Berawa", quota: 3, outlets: ["Nourish Berawa"] },
+  ungasan: { label: "Nourish Ungasan", quota: 2, outlets: ["Nourish Ungasan"] },
   uluwatu: { label: "Nourish Uluwatu & The Bakery", quota: 5, outlets: ["Nourish Uluwatu", "The Bakery Uluwatu"] },
 };
 

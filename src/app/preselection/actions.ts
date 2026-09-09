@@ -88,8 +88,8 @@ export async function qualifyFinalists(): Promise<QualificationResult> {
 
   // Quota per outlet pool
   const pools: { outlets: OutletLocation[]; quota: number }[] = [
-    { outlets: ["Nourish Berawa"], quota: 2 },
-    { outlets: ["Nourish Ungasan"], quota: 3 },
+    { outlets: ["Nourish Berawa"], quota: 3 },
+    { outlets: ["Nourish Ungasan"], quota: 2 },
     { outlets: ["Nourish Uluwatu", "The Bakery Uluwatu"], quota: 5 },
   ];
 
