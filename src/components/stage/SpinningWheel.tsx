@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image, { type StaticImageData } from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
-import { targetRotation } from '@/lib/wheel';
+import { fitFontSize, targetRotation, truncateToWidth, wedgeWidth } from '@/lib/wheel';
 import rosetta from '@/asset/rosetta.jpeg';
 import swan from '@/asset/swan.jpeg';
 import seahorse from '@/asset/seahorse.jpeg';
@@ -77,9 +77,25 @@ export default function SpinningWheel({
   const cx = 200;
   const cy = 200;
 
+  // Labels read outwards along the radius, so their room is the radial run
+  // between the hub and the rim — far more than the chord of a narrow wedge.
+  const labelOuter = radius - 14;
+  const labelInner = 56;
+  const labelRun = labelOuter - labelInner;
+  // Narrowest point of that run: how tall the stacked lines may get.
+  const lineBudget = wedgeWidth(labelInner, segments.length);
+
+  // The wheel steps down while an image reveal shares the screen with it.
+  const wheelSize =
+    revealed && resultSegment?.image
+      ? 'w-[min(42vh,72vw)] max-w-[480px]'
+      : 'w-[min(60vh,84vw)] max-w-[680px]';
+
   return (
     <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
-      <div className="relative w-[44vh] h-[44vh] max-w-[560px] max-h-[560px] min-w-[200px] min-h-[200px]">
+      <div
+        className={`relative aspect-square min-w-[220px] transition-[width] duration-500 ease-out ${wheelSize}`}
+      >
         {/* Pointer */}
         <div className="absolute top-[-16px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[18px] border-l-transparent border-r-[18px] border-r-transparent border-t-[36px] border-t-terracotta z-10 filter drop-shadow-md"></div>
 
@@ -103,14 +119,37 @@ export default function SpinningWheel({
               const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
               const pathData = `M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
 
-              // Calculate text position
               const midAngle = startAngle + (endAngle - startAngle) / 2;
-              const textX = cx + (radius * 0.65) * Math.cos((Math.PI * (midAngle - 90)) / 180);
-              const textY = cy + (radius * 0.65) * Math.sin((Math.PI * (midAngle - 90)) / 180);
 
               const color = PALETTE[i % PALETTE.length];
               const textFill = color === DARK_SWATCH ? 'fill-steamed-milk' : 'fill-espresso-black';
               const isWinner = result === segment.id;
+
+              // Size each label to its own length so long competitor names stay
+              // inside their wedge instead of running over the hub and the rim.
+              const labelSize = fitFontSize(segment.label, {
+                maxWidth: labelRun,
+                maxSize: Math.min(20, lineBudget / (segment.sublabel ? 2.4 : 1.4)),
+                minSize: 8,
+              });
+              const labelText = truncateToWidth(segment.label, labelSize, labelRun);
+
+              const subSize = segment.sublabel
+                ? fitFontSize(segment.sublabel, {
+                    maxWidth: labelRun,
+                    maxSize: labelSize * 0.72,
+                    minSize: 6,
+                  })
+                : 0;
+              const subText = segment.sublabel
+                ? truncateToWidth(segment.sublabel, subSize, labelRun)
+                : '';
+
+              // Keep every label upright: wedges on the left half read inwards.
+              const flipped = midAngle > 180;
+              const textRotation = flipped ? midAngle + 90 : midAngle - 90;
+              const anchorX = flipped ? -labelOuter : labelOuter;
+              const anchor = flipped ? 'start' : 'end';
 
               return (
                 <g key={segment.id}>
@@ -119,25 +158,28 @@ export default function SpinningWheel({
                     fill={color}
                     className="stroke-espresso-black stroke-2"
                   />
-                  <g transform={`translate(${textX}, ${textY}) rotate(${midAngle})`}>
+                  <g transform={`translate(${cx}, ${cy}) rotate(${textRotation})`}>
                     <text
-                      x="0"
-                      y={segment.sublabel ? -5 : 0}
-                      textAnchor="middle"
-                      alignmentBaseline="middle"
-                      className={`font-display text-sm font-bold ${textFill} ${isWinner ? 'text-xl' : ''}`}
+                      x={anchorX}
+                      y={segment.sublabel ? -subSize * 0.7 : 0}
+                      textAnchor={anchor}
+                      dominantBaseline="middle"
+                      fontSize={labelSize}
+                      fontWeight={isWinner ? 800 : 700}
+                      className={`font-display ${textFill}`}
                     >
-                      {segment.label}
+                      {labelText}
                     </text>
                     {segment.sublabel && (
                       <text
-                        x="0"
-                        y="9"
-                        textAnchor="middle"
-                        alignmentBaseline="middle"
-                        className={`font-sans text-[9px] ${textFill} opacity-70`}
+                        x={anchorX}
+                        y={labelSize * 0.62}
+                        textAnchor={anchor}
+                        dominantBaseline="middle"
+                        fontSize={subSize}
+                        className={`font-sans ${textFill} opacity-70`}
                       >
-                        {segment.sublabel}
+                        {subText}
                       </text>
                     )}
                   </g>
@@ -148,7 +190,7 @@ export default function SpinningWheel({
         </motion.div>
 
         {/* Center dot */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[36px] h-[36px] rounded-full bg-crema shadow-inner z-10 border-4 border-espresso-black"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[7.5%] h-[7.5%] rounded-full bg-crema shadow-inner z-10 border-4 border-espresso-black"></div>
       </div>
 
       {/* Result Display */}
