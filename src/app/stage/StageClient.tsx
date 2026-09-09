@@ -15,7 +15,6 @@ import CountdownTimer from '@/components/stage/CountdownTimer'
 import EliminationReveal from '@/components/stage/EliminationReveal'
 import PodiumReveal from '@/components/stage/PodiumReveal'
 import RulesCarousel from '@/components/stage/RulesCarousel'
-import { createClient } from '@/lib/supabase/client'
 
 export default function StageClient() {
   const { state: tournamentState, loading: stateLoading } = useTournamentState()
@@ -24,7 +23,6 @@ export default function StageClient() {
   const { scores: r2Scores, loading: r2Loading } = useR2Scores()
 
   const [isFullscreen, setIsFullscreen] = useState(false)
-  const supabase = createClient()
 
   const { seconds: liveTimerSeconds } = useCountdownTimer({
     seconds: tournamentState?.timer_seconds ?? 180,
@@ -55,19 +53,6 @@ export default function StageClient() {
     }
   }, [])
 
-  // Update tournament state pattern
-  const handleWheelResult = useCallback(
-    async (pattern: string) => {
-      if (tournamentState) {
-        await supabase
-          .from('tournament_state')
-          .update({ active_pattern: pattern })
-          .eq('id', tournamentState.id)
-      }
-    },
-    [supabase, tournamentState]
-  )
-
   const isLoading =
     stateLoading || competitorsLoading || r1Loading || r2Loading
 
@@ -97,6 +82,22 @@ export default function StageClient() {
   const activeCompetitor = competitors.find(
     (c) => c.id === tournamentState.active_competitor_id
   )
+
+  // Competitor draw wheel: everyone still undrawn, plus the competitor currently
+  // being revealed — useCompetitors refetches the moment the draw is written, and
+  // without that second clause the spin target would vanish mid-animation.
+  const wheelRoster = competitors
+    .filter(
+      (c) =>
+        (c.status === 'qualified_finalist' || c.status === 'qualified_top_5') &&
+        (c.competition_order === null ||
+          c.id === tournamentState.active_competitor_id)
+    )
+    .sort((a, b) => a.created_at.localeCompare(b.created_at))
+
+  const drawnOrder = competitors
+    .filter((c) => c.competition_order !== null)
+    .sort((a, b) => (a.competition_order ?? 0) - (b.competition_order ?? 0))
 
   // Compute Elimination Reveal data
   const computeEliminationRankings = () => {
@@ -171,8 +172,42 @@ export default function StageClient() {
             key="spinning_wheel"
             spinning={true}
             result={tournamentState.active_pattern}
-            onResult={handleWheelResult}
           />
+        )
+      case 'competitor_wheel':
+        return (
+          <div
+            key="competitor_wheel"
+            className="flex-1 flex flex-col items-center justify-center gap-4 min-h-0"
+          >
+            <SpinningWheel
+              segments={wheelRoster.map((c) => ({
+                id: c.id,
+                label: c.full_name,
+                sublabel: c.outlet,
+              }))}
+              spinning={true}
+              result={tournamentState.active_competitor_id}
+              caption="Up Next"
+              resultBadge={
+                activeCompetitor?.competition_order
+                  ? `#${activeCompetitor.competition_order}`
+                  : undefined
+              }
+            />
+            {drawnOrder.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 px-8 max-w-5xl text-sm">
+                {drawnOrder.map((c) => (
+                  <span key={c.id} className="text-[#FAEDCD]/70">
+                    <span className="text-[#D4A373] font-bold">
+                      #{c.competition_order}
+                    </span>{' '}
+                    {c.full_name}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
         )
       case 'rules_carousel':
         return <RulesCarousel key="rules_carousel" autoPlayInterval={6000} />

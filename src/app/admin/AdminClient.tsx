@@ -44,6 +44,13 @@ export default function AdminClient() {
     setLoading(actionName)
     try {
       const res = await actionFn()
+      // Actions report failures in their return value rather than throwing.
+      if (res && res.success === false) {
+        setResultMessage(`Error: ${res.error || actionName + ' failed'}`)
+        setTimeout(() => setResultMessage(null), 5000)
+        setLoading(null)
+        return
+      }
       setResultMessage(`Success: ${actionName} completed.`)
       setTimeout(() => setResultMessage(null), 3000)
     } catch (err: any) {
@@ -97,7 +104,7 @@ export default function AdminClient() {
   if (tsLoading) return <div className="min-h-screen bg-[#121212] text-[#FAEDCD] flex items-center justify-center font-[family-name:var(--font-syne)]">Loading Dashboard...</div>
 
   const stages: BattleStage[] = ['preselection_berawa', 'preselection_uluwatu', 'preselection_ungasan', 'main_day_r1_top10', 'main_day_r2_top5', 'completed']
-  const screenModes: ScreenDisplayMode[] = ['idle_timer', 'spinning_wheel', 'mid_stage_cut', 'podium_ceremony', 'rules_carousel']
+  const screenModes: ScreenDisplayMode[] = ['idle_timer', 'spinning_wheel', 'competitor_wheel', 'mid_stage_cut', 'podium_ceremony', 'rules_carousel']
   const patterns: PatternType[] = ['Rosetta', 'Swan', 'Seahorse', 'Phoenix', 'Stacked Tulip']
 
   const qualifiedFinalists = competitors.filter(c => c.status === 'qualified_finalist' || c.status === 'qualified_top_5')
@@ -214,6 +221,24 @@ export default function AdminClient() {
             
             <div className="flex flex-col gap-4">
               <div>
+                <label className="text-sm text-[#D4A373] mb-1 block">Competitor Draw</label>
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => handleAction('spinCompetitorWheel', actions.spinCompetitorWheel)}
+                    disabled={loading !== null}
+                    className="flex-1 px-3 py-2 bg-[#D4A373] text-[#121212] font-bold rounded-lg hover:brightness-110 disabled:opacity-50"
+                  >
+                    Spin Competitor Wheel
+                  </button>
+                  <button
+                    onClick={() => handleAction('resetDrawOrder', actions.resetDrawOrder)}
+                    disabled={loading !== null}
+                    className="px-3 py-2 border border-[#E76F51] text-[#E76F51] rounded-lg text-sm hover:bg-[#E76F51]/10 disabled:opacity-50"
+                  >
+                    Reset Order
+                  </button>
+                </div>
+
                 <label className="text-sm text-[#D4A373] mb-1 block">Active Competitor</label>
                 <div className="relative">
                   <select 
@@ -223,7 +248,9 @@ export default function AdminClient() {
                   >
                     <option value="">-- Select Competitor --</option>
                     {qualifiedFinalists.map(c => (
-                      <option key={c.id} value={c.id}>{c.full_name} ({c.outlet})</option>
+                      <option key={c.id} value={c.id}>
+                        {c.competition_order ? `#${c.competition_order} ` : ''}{c.full_name} ({c.outlet})
+                      </option>
                     ))}
                   </select>
                   <ChevronDown className="absolute right-3 top-2.5 text-[#D4A373]" size={16} />

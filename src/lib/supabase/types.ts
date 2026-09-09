@@ -43,6 +43,7 @@ export type BattleStage =
 export type ScreenDisplayMode =
   | "idle_timer"
   | "spinning_wheel"
+  | "competitor_wheel"
   | "mid_stage_cut"
   | "podium_ceremony"
   | "rules_carousel";
@@ -57,6 +58,8 @@ export interface Competitor {
   position: StaffPosition;
   outlet: OutletLocation;
   status: CompetitorStatus;
+  /** Draw order assigned by the stage competitor wheel; null = not drawn yet. */
+  competition_order: number | null;
   created_at: string;
 }
 
@@ -128,9 +131,10 @@ export interface Database {
     Tables: {
       competitors: {
         Row: Competitor;
-        Insert: Omit<Competitor, "id" | "created_at" | "status"> & {
+        Insert: Omit<Competitor, "id" | "created_at" | "status" | "competition_order"> & {
           id?: string;
           status?: CompetitorStatus;
+          competition_order?: number | null;
           created_at?: string;
         };
         Update: Partial<Omit<Competitor, "id">>;

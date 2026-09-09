@@ -228,3 +228,59 @@ export async function headJudgeVote(winnerId: string, loserId: string) {
   if (error) return { success: false, error: error.message };
   return { success: true };
 }
+
+// ============================================================
+// 13. Competitor draw wheel
+// ============================================================
+
+/**
+ * Draws a random competitor that has not competed yet, stamps them with the
+ * next competition order number, and flips the stage to the competitor wheel
+ * so it animates toward the drawn name.
+ */
+export async function spinCompetitorWheel() {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("competitors")
+    .select("id, competition_order, status")
+    .in("status", ["qualified_finalist", "qualified_top_5"]);
+  if (error) return { success: false, error: error.message };
+
+  const roster = (data ?? []) as Array<{ id: string; competition_order: number | null }>;
+  const undrawn = roster.filter((c) => c.competition_order === null);
+  if (undrawn.length === 0) {
+    return { success: false, error: "All competitors have already been drawn" };
+  }
+
+  const picked = undrawn[Math.floor(Math.random() * undrawn.length)];
+  const nextOrder =
+    roster.reduce((max, c) => Math.max(max, c.competition_order ?? 0), 0) + 1;
+
+  // ponytail: read-then-write, fine for a single admin console. Move into a
+  // Postgres function if two admins ever spin at the same moment.
+  const { error: updateError } = await supabase
+    .from("competitors")
+    .update({ competition_order: nextOrder })
+    .eq("id", picked.id);
+  if (updateError) return { success: false, error: updateError.message };
+
+  const stateResult = await updateTournamentState({
+    active_competitor_id: picked.id,
+    screen_mode: "competitor_wheel",
+  });
+  if (!stateResult.success) return stateResult;
+
+  return { success: true, competitorId: picked.id, order: nextOrder };
+}
+
+/** Clears every draw order so the wheel is full again (rehearsal / restart). */
+export async function resetDrawOrder() {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("competitors")
+    .update({ competition_order: null })
+    .not("competition_order", "is", null);
+  if (error) return { success: false, error: error.message };
+  return { success: true };
+}
