@@ -85,16 +85,18 @@ export default function SpinningWheel({
   // Narrowest point of that run: how tall the stacked lines may get.
   const lineBudget = wedgeWidth(labelInner, segments.length);
 
-  // The wheel steps down while an image reveal shares the screen with it.
-  const wheelSize =
+  // Fill the stage, reserving just enough height for whatever sits below the
+  // wheel: the caption alone, or the caption plus a pattern image reveal.
+  const wheelWidth =
     revealed && resultSegment?.image
-      ? 'w-[min(42vh,72vw)] max-w-[480px]'
-      : 'w-[min(60vh,84vw)] max-w-[680px]';
+      ? 'min(84vh - 140px, 88vw, 720px)'
+      : 'min(100vh - 190px, 94vw, 940px)';
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
       <div
-        className={`relative aspect-square min-w-[220px] transition-[width] duration-500 ease-out ${wheelSize}`}
+        className="relative aspect-square min-w-[220px] transition-[width] duration-500 ease-out"
+        style={{ width: wheelWidth }}
       >
         {/* Pointer */}
         <div className="absolute top-[-16px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[18px] border-l-transparent border-r-[18px] border-r-transparent border-t-[36px] border-t-terracotta z-10 filter drop-shadow-md"></div>
