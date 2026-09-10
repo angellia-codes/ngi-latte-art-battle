@@ -39,9 +39,9 @@ export default function CountdownTimer({
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-espresso-black p-8 relative overflow-hidden">
-      <div className="relative w-[400px] h-[400px] flex items-center justify-center">
+      <div className="relative w-[min(520px,48vh)] h-[min(520px,48vh)] flex items-center justify-center">
         {/* SVG Ring */}
-        <svg className="absolute w-full h-full transform -rotate-90">
+        <svg viewBox="0 0 400 400" className="absolute w-full h-full transform -rotate-90">
           <circle
             cx="200"
             cy="200"
@@ -64,7 +64,7 @@ export default function CountdownTimer({
 
         {/* Time Text */}
         <motion.div
-          className={`font-display text-9xl font-bold tracking-widest ${color}`}
+          className={`font-display text-[min(8rem,11.6vh)] font-bold tracking-widest ${color}`}
           animate={isLowTime && isRunning ? { scale: [1, 1.05, 1] } : {}}
           transition={{ repeat: Infinity, duration: 1 }}
         >
