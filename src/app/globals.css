@@ -13,6 +13,10 @@
   /* Core Palette */
   --color-espresso: #121212;
   --color-charcoal: #1E1E1E;
+  /* Components reach for these longer names; without them Tailwind emits no
+     rule at all and the utility silently does nothing. */
+  --color-espresso-black: #121212;
+  --color-dark-charcoal: #1E1E1E;
   --color-crema: #D4A373;
   --color-steamed-milk: #FAEDCD;
   --color-sage: #2A9D8F;
