@@ -254,20 +254,20 @@ export default function JudgeClient() {
   return (
     <div className="min-h-screen bg-[#121212] text-[#FAEDCD] flex flex-col font-[family-name:var(--font-syne)] pb-24">
       {/* Top App Bar */}
-      <header className="sticky top-0 z-50 bg-[#1E1E1E] border-b border-[#D4A373]/20 px-6 py-4 flex items-center justify-between shadow-lg">
-        <div className="flex items-center gap-4">
+      <header className="sticky top-0 z-50 bg-[#1E1E1E] border-b border-[#D4A373]/20 px-4 sm:px-6 py-3 sm:py-4 flex flex-wrap sm:flex-nowrap items-center justify-between gap-x-3 gap-y-2 shadow-lg">
+        <div className="flex items-center gap-4 min-w-0 basis-full sm:basis-auto">
           <button 
             onClick={() => setSelectedJudge(null)}
             className="p-2 hover:bg-[#D4A373]/10 rounded-full transition-colors text-[#D4A373]"
           >
             <ChevronLeft size={28} />
           </button>
-          <div>
-            <h2 className="text-lg text-[#FAEDCD]/70">{selectedJudge}</h2>
+          <div className="min-w-0">
+            <h2 className="text-lg text-[#FAEDCD]/70 truncate">{selectedJudge}</h2>
             {activeCompetitor ? (
-              <div className="flex items-baseline gap-3">
-                <span className="text-2xl font-bold text-[#D4A373]">{activeCompetitor.full_name}</span>
-                <span className="text-lg opacity-75">{activeCompetitor.outlet}</span>
+              <div className="flex flex-wrap items-baseline gap-x-3">
+                <span className="text-xl sm:text-2xl font-bold text-[#D4A373] leading-tight">{activeCompetitor.full_name}</span>
+                <span className="text-base sm:text-lg opacity-75">{activeCompetitor.outlet}</span>
               </div>
             ) : (
               <span className="text-xl text-[#FAEDCD]/50 italic">Waiting for next competitor...</span>
@@ -275,7 +275,7 @@ export default function JudgeClient() {
           </div>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6 shrink-0">
           {isRound1 && tournamentState?.active_pattern && (
             <div className="flex items-center gap-2 bg-[#D4A373]/10 px-4 py-2 rounded-full border border-[#D4A373]/30">
               <Coffee size={20} className="text-[#D4A373]" />
@@ -283,7 +283,7 @@ export default function JudgeClient() {
             </div>
           )}
           
-          <div className="flex items-center gap-3 bg-[#121212] px-5 py-2.5 rounded-xl border border-white/5">
+          <div className="hidden sm:flex items-center gap-3 bg-[#121212] px-5 py-2.5 rounded-xl border border-white/5">
             <Timer size={24} className={timerColor} />
             <span className={`text-3xl font-mono tracking-wider ${timerColor}`}>
               {formatTimer(tournamentState?.timer_seconds || 0)}
