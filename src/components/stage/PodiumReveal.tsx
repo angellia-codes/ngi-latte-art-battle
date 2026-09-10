@@ -45,8 +45,8 @@ export default function PodiumReveal({ champion, runnerUp1, runnerUp2 }: PodiumR
       </motion.div>
       
       <motion.div 
-        initial={{ height: 0 }}
-        animate={{ height: place === 1 ? 400 : place === 2 ? 300 : 200 }}
+        initial={{ height: '0%' }}
+        animate={{ height: place === 1 ? '60%' : place === 2 ? '45%' : '30%' }}
         transition={{ type: 'spring', bounce: 0.2, duration: 1 }}
         className="w-full flex items-start justify-center pt-8 relative overflow-hidden"
         style={{ backgroundColor: color }}
