@@ -95,10 +95,6 @@ export default function StageClient() {
     )
     .sort((a, b) => a.created_at.localeCompare(b.created_at))
 
-  const drawnOrder = competitors
-    .filter((c) => c.competition_order !== null)
-    .sort((a, b) => (a.competition_order ?? 0) - (b.competition_order ?? 0))
-
   // Compute Elimination Reveal data
   const computeEliminationRankings = () => {
     const qualifiedCompetitors = competitors.filter(c => c.status === 'qualified_finalist')
@@ -195,18 +191,6 @@ export default function StageClient() {
                   : undefined
               }
             />
-            {drawnOrder.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 px-8 max-w-5xl text-sm">
-                {drawnOrder.map((c) => (
-                  <span key={c.id} className="text-[#FAEDCD]/70">
-                    <span className="text-[#D4A373] font-bold">
-                      #{c.competition_order}
-                    </span>{' '}
-                    {c.full_name}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
         )
       case 'rules_carousel':
