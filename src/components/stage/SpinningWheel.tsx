@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Image, { type StaticImageData } from 'next/image';
 import { motion, AnimatePresence } from 'motion/react';
-import { targetRotation } from '@/lib/wheel';
+import { labelFontSize, targetRotation } from '@/lib/wheel';
 import rosetta from '@/asset/rosetta.jpeg';
 import swan from '@/asset/swan.jpeg';
 import seahorse from '@/asset/seahorse.jpeg';
@@ -41,6 +41,13 @@ const PATTERN_SEGMENTS: WheelSegment[] = [
 const PALETTE = ['#D4A373', '#FAEDCD', '#E76F51', '#2A9D8F', '#1E1E1E'];
 const DARK_SWATCH = '#1E1E1E';
 
+// SVG user-unit geometry (viewBox is 400x400).
+const RADIUS = 200;
+const CX = 200;
+const CY = 200;
+const TEXT_X = CX + RADIUS - 14; // label sits just inside the rim
+const USABLE_LENGTH = RADIUS - 40; // rim padding + centre hub
+
 export default function SpinningWheel({
   segments = PATTERN_SEGMENTS,
   spinning = false,
@@ -73,13 +80,12 @@ export default function SpinningWheel({
     return () => clearTimeout(timer);
   }, [spinning, resultIndex, segments.length]);
 
-  const radius = 200;
-  const cx = 200;
-  const cy = 200;
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full overflow-hidden">
-      <div className="relative w-[44vh] h-[44vh] max-w-[560px] max-h-[560px] min-w-[200px] min-h-[200px]">
+    <div className="flex flex-col items-center justify-center w-full h-full min-h-0 overflow-hidden pt-6">
+      {/* Square sized off whatever height is left, so the wheel fills the stage
+          and shrinks again once the reveal block appears below it. */}
+      <div className="relative flex-1 min-h-0 aspect-square max-w-full">
         {/* Pointer */}
         <div className="absolute top-[-16px] left-1/2 -translate-x-1/2 w-0 h-0 border-l-[18px] border-l-transparent border-r-[18px] border-r-transparent border-t-[36px] border-t-terracotta z-10 filter drop-shadow-md"></div>
 
@@ -95,22 +101,24 @@ export default function SpinningWheel({
               const startAngle = (i * 360) / segments.length;
               const endAngle = ((i + 1) * 360) / segments.length;
 
-              const x1 = cx + radius * Math.cos((Math.PI * (startAngle - 90)) / 180);
-              const y1 = cy + radius * Math.sin((Math.PI * (startAngle - 90)) / 180);
-              const x2 = cx + radius * Math.cos((Math.PI * (endAngle - 90)) / 180);
-              const y2 = cy + radius * Math.sin((Math.PI * (endAngle - 90)) / 180);
+              const x1 = CX + RADIUS * Math.cos((Math.PI * (startAngle - 90)) / 180);
+              const y1 = CY + RADIUS * Math.sin((Math.PI * (startAngle - 90)) / 180);
+              const x2 = CX + RADIUS * Math.cos((Math.PI * (endAngle - 90)) / 180);
+              const y2 = CY + RADIUS * Math.sin((Math.PI * (endAngle - 90)) / 180);
 
               const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
-              const pathData = `M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
+              const pathData = `M ${CX} ${CY} L ${x1} ${y1} A ${RADIUS} ${RADIUS} 0 ${largeArcFlag} 1 ${x2} ${y2} Z`;
 
-              // Calculate text position
               const midAngle = startAngle + (endAngle - startAngle) / 2;
-              const textX = cx + (radius * 0.65) * Math.cos((Math.PI * (midAngle - 90)) / 180);
-              const textY = cy + (radius * 0.65) * Math.sin((Math.PI * (midAngle - 90)) / 180);
 
               const color = PALETTE[i % PALETTE.length];
               const textFill = color === DARK_SWATCH ? 'fill-steamed-milk' : 'fill-espresso-black';
               const isWinner = result === segment.id;
+
+              // Labels read along the radius, not the arc: a long name gets the
+              // full ~160px of usable radius instead of a thin slice of arc.
+              const labelSize = labelFontSize(segment.label, USABLE_LENGTH, 16) * (isWinner ? 1.15 : 1);
+              const flipped = midAngle > 180;
 
               return (
                 <g key={segment.id}>
@@ -119,23 +127,32 @@ export default function SpinningWheel({
                     fill={color}
                     className="stroke-espresso-black stroke-2"
                   />
-                  <g transform={`translate(${textX}, ${textY}) rotate(${midAngle})`}>
+                  <g
+                    transform={
+                      `rotate(${midAngle - 90} ${CX} ${CY})` +
+                      (flipped ? ` rotate(180 ${TEXT_X} ${CY})` : '')
+                    }
+                  >
                     <text
-                      x="0"
-                      y={segment.sublabel ? -5 : 0}
-                      textAnchor="middle"
+                      x={TEXT_X}
+                      y={CY}
+                      dy={segment.sublabel ? -4 : 0}
+                      fontSize={labelSize}
+                      textAnchor={flipped ? 'start' : 'end'}
                       alignmentBaseline="middle"
-                      className={`font-display text-sm font-bold ${textFill} ${isWinner ? 'text-xl' : ''}`}
+                      className={`font-display font-bold ${textFill}`}
                     >
                       {segment.label}
                     </text>
                     {segment.sublabel && (
                       <text
-                        x="0"
-                        y="9"
-                        textAnchor="middle"
+                        x={TEXT_X}
+                        y={CY}
+                        dy="9"
+                        fontSize={labelFontSize(segment.sublabel, USABLE_LENGTH, 10)}
+                        textAnchor={flipped ? 'start' : 'end'}
                         alignmentBaseline="middle"
-                        className={`font-sans text-[9px] ${textFill} opacity-70`}
+                        className={`font-sans ${textFill} opacity-70`}
                       >
                         {segment.sublabel}
                       </text>
@@ -171,7 +188,7 @@ export default function SpinningWheel({
                   alt={resultSegment.id}
                   width={220}
                   height={220}
-                  className="rounded object-cover w-[16vh] h-[16vh] max-w-[180px] max-h-[180px] min-w-[90px] min-h-[90px]"
+                  className="rounded object-cover w-[13vh] h-[13vh] max-w-[150px] max-h-[150px] min-w-[80px] min-h-[80px]"
                 />
               </motion.div>
             )}
