@@ -174,7 +174,7 @@ export default function StageClient() {
         return (
           <div
             key="competitor_wheel"
-            className="flex-1 flex flex-col items-center justify-center gap-4 min-h-0"
+            className="flex-1 flex flex-col items-center justify-center gap-4 min-h-0 pb-20"
           >
             <SpinningWheel
               segments={wheelRoster.map((c) => ({
